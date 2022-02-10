@@ -1,0 +1,148 @@
+#:def NIST(name, expr)
+   subroutine eval_${name}$(n, x, y, b, r)
+      integer, intent(in) :: n
+      real(dp), intent(in) :: x(n), y(n)
+      real(dp), intent(in) :: b(:)
+      real(dp), intent(out) :: r(n)
+      r = y - ${expr}$
+   end subroutine
+#:enddef NIST
+
+module nist_strd_nls
+
+   implicit none
+
+   integer, parameter :: dp = kind(1.0d0)
+
+   real(dp), parameter :: pi = 3.141592653589793238462643383279_dp
+
+contains
+
+   ! y = b1 * (b2+x)**(-1/b3)  +  e
+   @:NIST(Bennet5, &
+      b(1) * (b(2) + x)**(-1.0_dp / b(3)) &
+   )
+
+   ! y = b1*(1-exp(-b2*x))  +  e
+   @:NIST(BoxBOD, &
+      b(1) * (1.0_dp - exp(-b(2) * x)) &
+   )
+
+   ! y = exp(-b1*x)/(b2+b3*x)  +  e
+   @:NIST(Chwirut, &
+      exp(-b(1) * x) / (b(2) + b(3) * x) &
+   )
+
+   ! y  = b1*x**b2  +  e
+   @:NIST(DanWood, &
+      b(1)*x**b(2) &
+   )
+
+   ! y = b1*exp( -b2*x ) + b3*exp( -(x-b4)**2 / b5**2 ) + b6*exp( -(x-b7)**2 / b8**2 ) + e
+   @:NIST(Gauss, &
+      b(1) * exp(-b(2) * x) + b(3) * exp(-((x - b(4))/b(5))**2) + b(6) * exp(-((x - b(7))/b(8))**2) &
+   )
+
+   ! y = b1*exp(-b2*x) + b3*exp(-b4*x) + b5*exp(-b6*x)  +  e
+   @:NIST(Lanczos, &
+      b(1)*exp(-b(2)*x) + b(3)*exp(-b(4)*x) + b(5)*exp(-b(6)*x) &
+   )
+
+   ! y = (b1+b2*x+b3*x**2+b4*x**3) /
+   !     (1+b5*x+b6*x**2+b7*x**3)  +  e
+   @:NIST(Hahn1, &
+      (b(1)+b(2)*x+b(3)*x**2+b(4)*x**3) / (1.0_dp + b(5)*x+b(6)*x**2+b(7)*x**3) &
+   )
+
+   ! y = (b1 + b2*x + b3*x**2) /
+   !    (1 + b4*x + b5*x**2)  +  e
+   @:NIST(Kirby2, &
+      (b(1) + b(2)*x + b(3)*x**2) / (1.0_dp + b(4)*x + b(5)*x**2) &
+   )
+
+   ! y = b1*(x**2+x*b2) / (x**2+x*b3+b4)  +  e
+   @:NIST(MGH09, &
+      b(1)*(x**2 + x*b(2)) / (x**2 + x*b(3) + b(4)) &
+   )
+
+   ! y = b1 * exp(b2/(x+b3))  +  e
+   @:NIST(MGH10, &
+      b(1) * exp(b(2)/(x + b(3))) &
+   )
+
+   ! y = b1 + b2*exp(-x*b4) + b3*exp(-x*b5)
+   @:NIST(MGH17, &
+      b(1) + b(2)*exp(-x*b(4)) + b(3)*exp(-x*b(5)) &
+   )
+
+   ! y = b1*(1-exp(-b2*x))  +  e
+   @:NIST(Misra1a, &
+      b(1)*(1 - exp(-b(2)*x)) &
+   )
+
+   ! y = b1 * (1-(1+b2*x/2)**(-2))  +  e
+   @:NIST(Misra1b, &
+      b(1) * (1 - (1+b(2)*x/2)**(-2)) &
+   )
+
+   ! y = b1 * (1-(1+2*b2*x)**(-.5))  +  e
+   @:NIST(Misra1c, &
+      b(1) * (1-(1+2*b(2)*x)**(-0.5_dp)) &
+   )
+
+   ! y = b1*b2*x*((1+b2*x)**(-1))  +  e
+   @:NIST(Misra1d, &
+      b(1)*b(2)*x*((1+b(2)*x)**(-1)) &
+   )
+
+   ! y =  b1 - b2*x - arctan(b3/(x-b4))/pi  +  e
+   @:NIST(Roszman1, &
+      b(1) - b(2)*x - atan(b(3)/(x-b(4)))/pi &
+   )
+
+   ! y = b1 / (1+exp(b2-b3*x))  +  e
+   @:NIST(Rat42, &
+      b(1) / (1 + exp(b(2) - b(3)*x)) &
+   )
+
+
+   ! y = b1 / ((1+exp(b2-b3*x))**(1/b4))  +  e
+   @:NIST(Rat43, &
+      b(1) / ((1+exp(b(2)-b(3)*x))**(1/b(4))) &
+   )
+
+   ! y = (b1 + b2*x + b3*x**2 + b4*x**3) /
+   !     (1 + b5*x + b6*x**2 + b7*x**3)  +  e
+   @:NIST(Thurber, &
+      (b(1) + b(2)*x + b(3)*x**2 + b(4)*x**3) / (1 + b(5)*x + b(6)*x**2 + b(7)*x**3) &
+   )
+
+
+   ! y = b1 + b2*cos( 2*pi*x/12 ) + b3*sin( 2*pi*x/12 )
+   !        + b5*cos( 2*pi*x/b4 ) + b6*sin( 2*pi*x/b4 )
+   !        + b8*cos( 2*pi*x/b7 ) + b9*sin( 2*pi*x/b7 )  + e
+   @:NIST(ENSO, &
+      b(1) + b(2)*cos( 2*pi*x/12 ) + b(3)*sin( 2*pi*x/12 ) + &
+      b(5)*cos( 2*pi*x/b(4) ) + b(6)*sin( 2*pi*x/b(4) ) + &
+      b(8)*cos( 2*pi*x/b(7) ) + b(9)*sin( 2*pi*x/b(7) ) &
+   )
+
+   ! y = (b1/b2) * exp(-0.5*((x-b3)/b2)**2)  +  e
+   @:NIST(Eckerle4, &
+      (b(1)/b(2)) * exp(-0.5*((x-b(3))/b(2))**2) &
+   )
+
+
+   ! log(y) = b1 - b2*x1*exp(b3*x2) + e   
+   subroutine eval_Nelson(n, x, y, b, r)
+      integer, intent(in) :: n
+      real(dp), intent(in) :: x(2*n), y(n)
+      real(dp), intent(in) :: b(:)
+      real(dp), intent(out) :: r(n)
+      integer :: i
+      do i = 1, n
+         r(i) = log(y(i)) - (b(1) - b(2)*x(2*i-1)*exp(-b(3)*x(2*i)))
+      end do
+   end subroutine
+
+end module
